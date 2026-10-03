@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-
+import { adviceV4, pick, detectTopic } from './advice-v4';
 const qs = [
   { q: '昨夜はよく眠れた？', a: ['よく眠れた', 'まあまあ', 'あまり眠れなかった'] },
   { q: '今の気分はどう？', a: ['😊 とてもいい', '🙂 まあまあ', '😐 普通', '😔 少し沈んでいる', '😣 かなりしんどい'] },
@@ -208,9 +208,83 @@ export default function Page() {
 
   const meguReply = (value) => {
     const t = value.toLowerCase();
+    // ===== ここから v4 相談エンジン =====
+    const topic = detectTopic(t);
+    const seed = `${t}-${chat.length}-${today}`;
 
-    const pick = (items) =>
-      items[Math.floor(Math.random() * items.length)];
+    // 「別の案」に対応
+    if (/別の|ほか|他に|違う案/.test(t)) {
+      return `もちろん。別の案なら「${pick(
+        adviceV4.food.normal,
+        seed
+      )}」もあるよ。食事以外なら「${pick(
+        adviceV4.tired,
+        seed + 'action'
+      )}」も候補だよ。今は、食事・休み方・仕事の整理のどれを一緒に考えたい？`;
+    }
+
+    // 危険性の高い相談
+    if (topic === 'danger') {
+      return '今は普段のアドバイスより、安全を優先したいよ。ひとりで抱えず、近くの信頼できる人や専門の相談窓口につながってね。差し迫った危険がある場合は、地域の緊急窓口を利用してね。';
+    }
+
+    // 食事
+    if (topic === 'food') {
+      const food1 = pick(adviceV4.food.normal, seed);
+      const food2 = pick(adviceV4.food.low, seed + '2');
+
+      return `食事のことなら、今日は「${food1}」はどうかな。もう一案なら「${food2}」もあるよ。今の食欲は、しっかり食べたい・軽めがいい・あまりない、のどれに近い？`;
+    }
+
+    // 仕事
+    if (topic === 'work') {
+      const action = pick(adviceV4.work, seed);
+
+      return `仕事のことなんだね。今日は「${action}」くらいまで小さくしてみるのも一つだよ。今は解決策を一緒に整理したい？ それとも、まず何があったか聞いてほしい？`;
+    }
+
+    // 睡眠
+    if (topic === 'sleep') {
+      const rest = pick(adviceV4.rest, seed);
+
+      return `眠りのことが気になっているんだね。今日は「${rest}」くらいからでもいいよ。眠れない感じは、考えごとが止まらない・生活リズム・体が眠くならない、のどれに近い？`;
+    }
+
+    // 不安・心配
+    if (topic === 'anxious') {
+      const action = pick(adviceV4.anxious, seed);
+
+      return `不安があるんだね。今すぐ全部を解決しようとせず、「${action}」から始めてみるのも一つだよ。その心配は、まだ起きていないこと？ それとも今起きていることかな？`;
+    }
+
+    // 怒り
+    if (topic === 'anger') {
+      return pick(
+        [
+          'それは腹が立つよね。ここではきれいにまとめなくて大丈夫。何を言われたことが一番引っかかった？',
+          'イライラしているんだね。今すぐ結論を出さなくてもいいよ。本当は相手にどうしてほしかった？',
+          'その怒りには理由がありそうだね。出来事そのものと、自分が傷ついた部分を分けて話してみる？'
+        ],
+        seed
+      );
+    }
+
+    // 悲しい・落ち込み
+    if (topic === 'sad') {
+      const action = pick(adviceV4.sad, seed);
+
+      return `つらかったんだね。無理に前向きにならなくていいよ。今なら「${action}」くらいの小さなことでも十分。今日は話を聞いてほしい？ それとも少し楽になる方法を一緒に探す？`;
+    }
+
+    // 疲れ
+    if (topic === 'tired') {
+      const action = pick(adviceV4.tired, seed);
+      const rest = pick(adviceV4.rest, seed + 'rest');
+
+      return `少し使い切っている感じかな。今日は「${action}」か「${rest}」のどちらか一つで十分だよ。疲れは、体・気持ち・人付き合い・仕事のどれが一番大きい？`;
+    }
+    // ===== ここまで v4 相談エンジン =====
+    
 
     if (/死にたい|消えたい|自殺|生きたくない/.test(t)) {
       return 'とてもつらい気持ちを話してくれてありがとう。今は一人で抱え込まず、身近な人や専門の相談先につながってね。差し迫った危険があるなら、地域の緊急窓口に連絡してね。';
