@@ -215,7 +215,9 @@ export default function Page() {
     { key: 'effort', icon: '⭐', label: 'がんばったこと', energy: 'がんばりのしずく' },
     { key: 'reward', icon: '🎁', label: '自分へのごほうび', energy: 'ごほうびの実' },
     { key: 'rest', icon: '🌿', label: '休めたこと', energy: 'やすらぎのしずく' },
-    { key: 'brave', icon: '💪', label: '乗り越えたこと', energy: '勇気の種' }
+    { key: 'brave', icon: '💪', label: '乗り越えたこと', energy: '勇気の種' },
+    { key: 'together', icon: '❤️', label: '誰かとの嬉しいこと', energy: 'ありがとうの花びら' },
+    { key: 'discovery', icon: '🌈', label: '新しく気づいたこと', energy: '発見の星' }
   ];
 
   const addTreasure = (type) => {
@@ -245,7 +247,9 @@ export default function Page() {
     effort: '🌱',
     reward: '🍎',
     rest: '🪑',
-    brave: '🌳'
+    brave: '🌳',
+    together: '🌷',
+    discovery: '✨'
   }[type] || '🌿');
 
   const gardenMemoryText = (item) => ({
@@ -253,7 +257,9 @@ export default function Page() {
     effort: 'あの日の「がんばった」が、新しい芽になりました。',
     reward: '自分を大切にした時間が、この実になりました。',
     rest: '自分を休ませてあげられた日に生まれたベンチです。',
-    brave: '乗り越えた勇気が、この木を育てました。'
+    brave: '乗り越えた勇気が、この木を育てました。',
+    together: '誰かと分け合った嬉しさが、この花になりました。',
+    discovery: '新しく見つけた気づきが、庭に小さな光を灯しました。'
   }[item?.type] || 'あの日の気持ちが、芽ちゃんの世界に残っています。');
 
   const meguReply = (value) => {
@@ -889,21 +895,25 @@ export default function Page() {
             ? 'まだ小さな始まり。今日のたからものを一つ見つけてみよう。'
             : `これまでに ${treasures.length} 個のたからものが、この世界を育てているよ。`}
         </p>
-        <div className="moods" aria-label="芽ちゃんの庭">
-          {treasures.length === 0 && <span>🌱</span>}
-          {treasures.slice(0, 12).reverse().map((item) => (
-            <button
-              key={item.id}
-              className="gardenItem"
-              onClick={() => setSelectedTreasure(item)}
-              aria-label={`${item.date}の${item.label}`}
-              title="思い出を見る"
-            >
-              {gardenItem(item.type)}
-            </button>
-          ))}
-          {treasures.length >= 15 && <span title="庭に遊びにきた鳥">🐦</span>}
-          {treasures.length >= 30 && <span title="芽ちゃんのおうち">🏡</span>}
+        <div className="gardenScene" aria-label="芽ちゃんの庭">
+          <div className="gardenSky">{treasures.length >= 7 ? '☁️' : '☀️'}</div>
+          <div className="gardenMegu"><Megu mood="smile" /></div>
+          <div className="gardenGround">
+            {treasures.length === 0 && <button className="gardenObject starter" aria-label="最初の芽">🌱</button>}
+            {treasures.slice(0, 12).reverse().map((item, i) => (
+              <button
+                key={item.id}
+                className={`gardenObject pos${i % 8}`}
+                onClick={() => setSelectedTreasure(item)}
+                aria-label={`${item.date}の${item.label}`}
+                title="思い出を見る"
+              >
+                {gardenItem(item.type)}
+              </button>
+            ))}
+            {treasures.length >= 15 && <span className="gardenBird" title="庭に遊びにきた鳥">🐦</span>}
+            {treasures.length >= 30 && <span className="gardenHouse" title="芽ちゃんのおうち">🏡</span>}
+          </div>
         </div>
 
         {selectedTreasure && (
