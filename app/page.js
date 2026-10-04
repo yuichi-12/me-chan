@@ -73,6 +73,7 @@ export default function Page() {
   const [saved, setSaved] = useState(false);
   const [treasures, setTreasures] = useState([]);
   const [treasureNote, setTreasureNote] = useState('');
+  const [selectedTreasure, setSelectedTreasure] = useState(null);
 
   useEffect(() => {
     try {
@@ -238,6 +239,22 @@ export default function Page() {
     treasures.length >= 15 ? '花のある場所' :
     treasures.length >= 7 ? '若葉の庭' :
     treasures.length >= 3 ? '小さな花壇' : '芽ちゃんのはじまり';
+
+  const gardenItem = (type) => ({
+    good: '🌼',
+    effort: '🌱',
+    reward: '🍎',
+    rest: '🪑',
+    brave: '🌳'
+  }[type] || '🌿');
+
+  const gardenMemoryText = (item) => ({
+    good: 'あの日の「よかった」が、この花になりました。',
+    effort: 'あの日の「がんばった」が、新しい芽になりました。',
+    reward: '自分を大切にした時間が、この実になりました。',
+    rest: '自分を休ませてあげられた日に生まれたベンチです。',
+    brave: '乗り越えた勇気が、この木を育てました。'
+  }[item?.type] || 'あの日の気持ちが、芽ちゃんの世界に残っています。');
 
   const meguReply = (value) => {
     const t = value.toLowerCase();
@@ -873,9 +890,33 @@ export default function Page() {
             : `これまでに ${treasures.length} 個のたからものが、この世界を育てているよ。`}
         </p>
         <div className="moods" aria-label="芽ちゃんの庭">
-          🌱 {treasures.length >= 3 ? '🌼' : ''} {treasures.length >= 7 ? '🌿' : ''} {treasures.length >= 15 ? '🐦' : ''} {treasures.length >= 30 ? '🪑 🏡' : ''}
+          {treasures.length === 0 && <span>🌱</span>}
+          {treasures.slice(0, 12).reverse().map((item) => (
+            <button
+              key={item.id}
+              className="gardenItem"
+              onClick={() => setSelectedTreasure(item)}
+              aria-label={`${item.date}の${item.label}`}
+              title="思い出を見る"
+            >
+              {gardenItem(item.type)}
+            </button>
+          ))}
+          {treasures.length >= 15 && <span title="庭に遊びにきた鳥">🐦</span>}
+          {treasures.length >= 30 && <span title="芽ちゃんのおうち">🏡</span>}
         </div>
-        <small>芽ちゃんは大きくなりすぎず、思い出と庭が少しずつ育ちます。</small>
+
+        {selectedTreasure && (
+          <div className="memoryhint">
+            <b>{gardenItem(selectedTreasure.type)} {selectedTreasure.date}の思い出</b>
+            <p>{selectedTreasure.note ? `「${selectedTreasure.note}」` : selectedTreasure.label}</p>
+            <small>{gardenMemoryText(selectedTreasure)}</small>
+            <br />
+            <button className="soft" onClick={() => setSelectedTreasure(null)}>閉じる</button>
+          </div>
+        )}
+
+        <small>芽ちゃんは大きくなりすぎず、あなたの思い出と庭が少しずつ育ちます。庭の花や実を押すと、その日の思い出を見られます。</small>
       </section>
 
       <nav>
