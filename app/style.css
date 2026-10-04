@@ -13,3 +13,20 @@
 .gardenObject.pos0{left:8%;bottom:34px}.gardenObject.pos1{left:28%;bottom:58px}.gardenObject.pos2{right:28%;bottom:38px}.gardenObject.pos3{right:8%;bottom:64px}.gardenObject.pos4{left:14%;bottom:105px}.gardenObject.pos5{right:14%;bottom:112px}.gardenObject.pos6{left:37%;bottom:20px}.gardenObject.pos7{right:38%;bottom:90px}
 .gardenBird{position:absolute;right:18%;top:44px;font-size:25px}.gardenHouse{position:absolute;right:5%;bottom:20px;font-size:46px;z-index:2}
 @media(max-width:360px){.gardenScene{height:270px}.gardenObject{font-size:28px}}
+
+/* Garden v2: 思い出がひとつの風景として育つ */
+.gardenScene{height:330px;background:linear-gradient(#dff3f7 0 48%,#eaf4d5 48% 100%);border-radius:30px;border:1px solid #d5e6d1;box-shadow:inset 0 -22px 40px #7ca25e1f,0 8px 22px #6c87551a}
+.gardenScene:after{display:none}
+.gardenSun{position:absolute;right:25px;top:22px;font-size:32px;z-index:1;filter:drop-shadow(0 3px 8px #e5bb5944)}
+.gardenCloud{position:absolute;font-size:35px;opacity:.72;z-index:1}
+.cloudOne{left:20px;top:28px}.cloudTwo{right:82px;top:72px;font-size:25px;opacity:.5}
+.gardenHill{position:absolute;border-radius:50% 50% 0 0;z-index:1}
+.hillBack{left:-70px;right:110px;height:115px;bottom:70px;background:#cfe3ae;transform:rotate(2deg)}
+.hillFront{left:85px;right:-80px;height:140px;bottom:34px;background:#b8d58d;transform:rotate(-3deg)}
+.gardenPath{position:absolute;left:50%;bottom:-25px;width:82px;height:180px;background:#efe0bd;transform:translateX(-50%) perspective(180px) rotateX(28deg);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);z-index:2;opacity:.88}
+.gardenMegu{top:92px;left:50%;transform:translateX(-50%) scale(.48);z-index:5}
+.gardenObject{font-size:34px;background:#ffffffb8;border:1px solid #ffffffcc;box-shadow:0 5px 12px #49622d20;backdrop-filter:blur(3px);z-index:6}
+.gardenObject.pos0{left:7%;bottom:31px}.gardenObject.pos1{left:22%;bottom:92px}.gardenObject.pos2{right:21%;bottom:43px}.gardenObject.pos3{right:6%;bottom:105px}.gardenObject.pos4{left:9%;bottom:157px}.gardenObject.pos5{right:8%;bottom:170px}.gardenObject.pos6{left:31%;bottom:26px}.gardenObject.pos7{right:31%;bottom:118px}
+.gardenExtra{position:absolute;left:11%;bottom:72px;font-size:24px;z-index:4}.gardenBird{right:16%;top:62px;z-index:5}.gardenHouse{right:4%;bottom:22px;font-size:52px;z-index:4}
+.gardenStory{margin:10px auto 18px!important;max-width:320px;font-size:14px;line-height:1.7!important;color:#66755b!important}
+@media(max-width:360px){.gardenScene{height:300px}.gardenObject{font-size:29px}.gardenMegu{top:84px;transform:translateX(-50%) scale(.44)}}
