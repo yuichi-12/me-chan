@@ -72,6 +72,7 @@ export default function Page() {
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [treasures, setTreasures] = useState([]);
+  const [treasureNote, setTreasureNote] = useState('');
 
   useEffect(() => {
     try {
@@ -224,10 +225,12 @@ export default function Page() {
       date: today,
       type: item.key,
       label: item.label,
-      energy: item.energy
+      energy: item.energy,
+      note: treasureNote.trim()
     }, ...treasures].slice(0, 100);
     setTreasures(nt);
     localStorage.setItem('kokoro-treasures', JSON.stringify(nt));
+    setTreasureNote('');
   };
 
   const gardenStage =
@@ -838,6 +841,13 @@ export default function Page() {
       <section className="card">
         <h3>今日のたからもの</h3>
         <p>今日の小さな「よかった」を、芽ちゃんの成長エネルギーにしよう。</p>
+        <input
+          value={treasureNote}
+          onChange={(e) => setTreasureNote(e.target.value)}
+          maxLength="120"
+          placeholder="たとえば「今日は仕事を一つ片付けた」"
+          aria-label="今日のたからものの内容"
+        />
         <div className="grid">
           {treasureTypes.map((x) => (
             <button className="soft" key={x.key} onClick={() => addTreasure(x.key)}>
@@ -845,7 +855,12 @@ export default function Page() {
             </button>
           ))}
         </div>
-        {treasures[0] && <p className="saved">✓ 「{treasures[0].energy}」が芽ちゃんの世界に届いたよ。</p>}
+        {treasures[0] && (
+          <div className="saved">
+            ✓ 「{treasures[0].energy}」が芽ちゃんの世界に届いたよ。
+            {treasures[0].note && <><br /><small>「{treasures[0].note}」</small></>}
+          </div>
+        )}
       </section>
 
       <section className="card center">
