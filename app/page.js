@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { adviceV4, pick, detectTopic } from './advice-v4';
+import { adviceV4, pick, detectTopic, culturalAdvice, culturalLenses, requestedLens, lensReply } from './advice-v4';
 const qs = [
   { q: '昨夜はよく眠れた？', a: ['よく眠れた', 'まあまあ', 'あまり眠れなかった'] },
   { q: '今の気分はどう？', a: ['😊 とてもいい', '🙂 まあまあ', '😐 普通', '😔 少し沈んでいる', '😣 かなりしんどい'] },
@@ -71,6 +71,9 @@ export default function Page() {
   const [notice, setNotice] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [treasures, setTreasures] = useState([]);
+  const [treasureNote, setTreasureNote] = useState('');
+  const [selectedTreasure, setSelectedTreasure] = useState(null);
 
   useEffect(() => {
     try {
@@ -78,6 +81,7 @@ export default function Page() {
       setMemories(JSON.parse(localStorage.getItem('kokoro-memories') || '[]'));
       setNotice(JSON.parse(localStorage.getItem('kokoro-notice') ?? 'true'));
       setChat(JSON.parse(localStorage.getItem('kokoro-chat') || '[]'));
+      setTreasures(JSON.parse(localStorage.getItem('kokoro-treasures') || '[]'));
 
       const draft = JSON.parse(
         localStorage.getItem('kokoro-draft') || 'null'
@@ -206,11 +210,80 @@ export default function Page() {
     );
   };
 
+  const treasureTypes = [
+    { key: 'good', icon: '😊', label: 'よかったこと', energy: 'しあわせの種' },
+    { key: 'effort', icon: '⭐', label: 'がんばったこと', energy: 'がんばりのしずく' },
+    { key: 'reward', icon: '🎁', label: '自分へのごほうび', energy: 'ごほうびの実' },
+    { key: 'rest', icon: '🌿', label: '休めたこと', energy: 'やすらぎのしずく' },
+    { key: 'brave', icon: '💪', label: '乗り越えたこと', energy: '勇気の種' }
+  ];
+
+  const addTreasure = (type) => {
+    const item = treasureTypes.find((x) => x.key === type);
+    if (!item) return;
+    const nt = [{
+      id: Date.now(),
+      date: today,
+      type: item.key,
+      label: item.label,
+      energy: item.energy,
+      note: treasureNote.trim()
+    }, ...treasures].slice(0, 100);
+    setTreasures(nt);
+    localStorage.setItem('kokoro-treasures', JSON.stringify(nt));
+    setTreasureNote('');
+  };
+
+  const gardenStage =
+    treasures.length >= 30 ? '小さなお庭' :
+    treasures.length >= 15 ? '花のある場所' :
+    treasures.length >= 7 ? '若葉の庭' :
+    treasures.length >= 3 ? '小さな花壇' : '芽ちゃんのはじまり';
+
+  const gardenItem = (type) => ({
+    good: '🌼',
+    effort: '🌱',
+    reward: '🍎',
+    rest: '🪑',
+    brave: '🌳'
+  }[type] || '🌿');
+
+  const gardenMemoryText = (item) => ({
+    good: 'あの日の「よかった」が、この花になりました。',
+    effort: 'あの日の「がんばった」が、新しい芽になりました。',
+    reward: '自分を大切にした時間が、この実になりました。',
+    rest: '自分を休ませてあげられた日に生まれたベンチです。',
+    brave: '乗り越えた勇気が、この木を育てました。'
+  }[item?.type] || 'あの日の気持ちが、芽ちゃんの世界に残っています。');
+
   const meguReply = (value) => {
     const t = value.toLowerCase();
     // ===== ここから v4 相談エンジン =====
     const topic = detectTopic(t);
     const seed = `${t}-${chat.length}-${today}`;
+
+    // 明示された風水・占術は、体系・必要情報・出典を分けて回答する
+    const lens = requestedLens(t);
+    if (lens) {
+      const view = lensReply(lens, topic, seed);
+      const source = view?.source
+        ? ` 参考：${view.source.title}（${view.source.publisher}） ${view.source.url}`
+        : '';
+      if (view) {
+        return `【${view.title}】${view.basis} ${view.text} ※${view.disclaimer}${source}`;
+      }
+    }
+
+    // 通常相談では「質問に直接答える」を最優先し、その後に必要な時だけ伝統文化の別視点を添える
+    const optionalLens = (base, lensTopic = topic) => {
+      // 占いを求めていない人へ押しつけない。感情・仕事・休息の相談に限り、
+      // 風水を「選べる別視点」として短く案内する。
+      if (['work', 'anxious', 'tired', 'sad'].includes(lensTopic)) {
+        const view = culturalAdvice(lensTopic, seed);
+        return `${base}\n\n🌿 別の見方：${view.text}\n※${view.disclaimer}`;
+      }
+      return base;
+    };
 
     // 「別の案」に対応
     if (/別の|ほか|他に|違う案/.test(t)) {
@@ -240,7 +313,7 @@ export default function Page() {
     if (topic === 'work') {
       const action = pick(adviceV4.work, seed);
 
-      return `仕事のことなんだね。今日は「${action}」くらいまで小さくしてみるのも一つだよ。今は解決策を一緒に整理したい？ それとも、まず何があったか聞いてほしい？`;
+      return optionalLens(`仕事のことなんだね。まず質問に答えると、今日は「${action}」まで小さくして進めるのが一案だよ。状況をもう少し教えてくれれば、相手への伝え方や次の一手まで一緒に整理できるよ。`, 'work');
     }
 
     // 睡眠
@@ -254,7 +327,7 @@ export default function Page() {
     if (topic === 'anxious') {
       const action = pick(adviceV4.anxious, seed);
 
-      return `不安があるんだね。今すぐ全部を解決しようとせず、「${action}」から始めてみるのも一つだよ。その心配は、まだ起きていないこと？ それとも今起きていることかな？`;
+      return optionalLens(`不安があるんだね。まず今できることとして「${action}」から始めるのが一案だよ。もし何が不安なのか教えてくれたら、その内容そのものへの対処を一緒に考えるよ。`, 'anxious');
     }
 
     // 怒り
@@ -273,7 +346,7 @@ export default function Page() {
     if (topic === 'sad') {
       const action = pick(adviceV4.sad, seed);
 
-      return `つらかったんだね。無理に前向きにならなくていいよ。今なら「${action}」くらいの小さなことでも十分。今日は話を聞いてほしい？ それとも少し楽になる方法を一緒に探す？`;
+      return optionalLens(`つらかったんだね。今は無理に前向きにせず「${action}」くらいでも十分だよ。何があったか話してくれれば、その出来事に沿って一緒に考えるよ。`, 'sad');
     }
 
     // 疲れ
@@ -281,7 +354,7 @@ export default function Page() {
       const action = pick(adviceV4.tired, seed);
       const rest = pick(adviceV4.rest, seed + 'rest');
 
-      return `少し使い切っている感じかな。今日は「${action}」か「${rest}」のどちらか一つで十分だよ。疲れは、体・気持ち・人付き合い・仕事のどれが一番大きい？`;
+      return optionalLens(`少し使い切っている感じかな。今日は「${action}」か「${rest}」のどちらか一つで十分だよ。疲れの原因を教えてくれれば、休み方だけでなく原因への対処も一緒に考えるよ。`, 'tired');
     }
     // ===== ここまで v4 相談エンジン =====
     
@@ -780,6 +853,70 @@ export default function Page() {
         >
           💬 芽ちゃんと少し話す
         </button>
+      </section>
+
+      <section className="card">
+        <h3>今日のたからもの</h3>
+        <p>今日の小さな「よかった」を、芽ちゃんの成長エネルギーにしよう。</p>
+        <input
+          value={treasureNote}
+          onChange={(e) => setTreasureNote(e.target.value)}
+          maxLength="120"
+          placeholder="たとえば「今日は仕事を一つ片付けた」"
+          aria-label="今日のたからものの内容"
+        />
+        <div className="grid">
+          {treasureTypes.map((x) => (
+            <button className="soft" key={x.key} onClick={() => addTreasure(x.key)}>
+              {x.icon}<b>{x.label}</b><small>{x.energy}</small>
+            </button>
+          ))}
+        </div>
+        {treasures[0] && (
+          <div className="saved">
+            ✓ 「{treasures[0].energy}」が芽ちゃんの世界に届いたよ。
+            {treasures[0].note && <><br /><small>「{treasures[0].note}」</small></>}
+          </div>
+        )}
+      </section>
+
+      <section className="card center">
+        <h3>芽ちゃんのお庭</h3>
+        <Megu mood="smile" />
+        <h2>{gardenStage}</h2>
+        <p>
+          {treasures.length === 0
+            ? 'まだ小さな始まり。今日のたからものを一つ見つけてみよう。'
+            : `これまでに ${treasures.length} 個のたからものが、この世界を育てているよ。`}
+        </p>
+        <div className="moods" aria-label="芽ちゃんの庭">
+          {treasures.length === 0 && <span>🌱</span>}
+          {treasures.slice(0, 12).reverse().map((item) => (
+            <button
+              key={item.id}
+              className="gardenItem"
+              onClick={() => setSelectedTreasure(item)}
+              aria-label={`${item.date}の${item.label}`}
+              title="思い出を見る"
+            >
+              {gardenItem(item.type)}
+            </button>
+          ))}
+          {treasures.length >= 15 && <span title="庭に遊びにきた鳥">🐦</span>}
+          {treasures.length >= 30 && <span title="芽ちゃんのおうち">🏡</span>}
+        </div>
+
+        {selectedTreasure && (
+          <div className="memoryhint">
+            <b>{gardenItem(selectedTreasure.type)} {selectedTreasure.date}の思い出</b>
+            <p>{selectedTreasure.note ? `「${selectedTreasure.note}」` : selectedTreasure.label}</p>
+            <small>{gardenMemoryText(selectedTreasure)}</small>
+            <br />
+            <button className="soft" onClick={() => setSelectedTreasure(null)}>閉じる</button>
+          </div>
+        )}
+
+        <small>芽ちゃんは大きくなりすぎず、あなたの思い出と庭が少しずつ育ちます。庭の花や実を押すと、その日の思い出を見られます。</small>
       </section>
 
       <nav>
