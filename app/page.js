@@ -71,6 +71,7 @@ export default function Page() {
   const [notice, setNotice] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [treasures, setTreasures] = useState([]);
 
   useEffect(() => {
     try {
@@ -78,6 +79,7 @@ export default function Page() {
       setMemories(JSON.parse(localStorage.getItem('kokoro-memories') || '[]'));
       setNotice(JSON.parse(localStorage.getItem('kokoro-notice') ?? 'true'));
       setChat(JSON.parse(localStorage.getItem('kokoro-chat') || '[]'));
+      setTreasures(JSON.parse(localStorage.getItem('kokoro-treasures') || '[]'));
 
       const draft = JSON.parse(
         localStorage.getItem('kokoro-draft') || 'null'
@@ -205,6 +207,34 @@ export default function Page() {
       JSON.stringify(nm)
     );
   };
+
+  const treasureTypes = [
+    { key: 'good', icon: '😊', label: 'よかったこと', energy: 'しあわせの種' },
+    { key: 'effort', icon: '⭐', label: 'がんばったこと', energy: 'がんばりのしずく' },
+    { key: 'reward', icon: '🎁', label: '自分へのごほうび', energy: 'ごほうびの実' },
+    { key: 'rest', icon: '🌿', label: '休めたこと', energy: 'やすらぎのしずく' },
+    { key: 'brave', icon: '💪', label: '乗り越えたこと', energy: '勇気の種' }
+  ];
+
+  const addTreasure = (type) => {
+    const item = treasureTypes.find((x) => x.key === type);
+    if (!item) return;
+    const nt = [{
+      id: Date.now(),
+      date: today,
+      type: item.key,
+      label: item.label,
+      energy: item.energy
+    }, ...treasures].slice(0, 100);
+    setTreasures(nt);
+    localStorage.setItem('kokoro-treasures', JSON.stringify(nt));
+  };
+
+  const gardenStage =
+    treasures.length >= 30 ? '小さなお庭' :
+    treasures.length >= 15 ? '花のある場所' :
+    treasures.length >= 7 ? '若葉の庭' :
+    treasures.length >= 3 ? '小さな花壇' : '芽ちゃんのはじまり';
 
   const meguReply = (value) => {
     const t = value.toLowerCase();
@@ -780,6 +810,34 @@ export default function Page() {
         >
           💬 芽ちゃんと少し話す
         </button>
+      </section>
+
+      <section className="card">
+        <h3>今日のたからもの</h3>
+        <p>今日の小さな「よかった」を、芽ちゃんの成長エネルギーにしよう。</p>
+        <div className="grid">
+          {treasureTypes.map((x) => (
+            <button className="soft" key={x.key} onClick={() => addTreasure(x.key)}>
+              {x.icon}<b>{x.label}</b><small>{x.energy}</small>
+            </button>
+          ))}
+        </div>
+        {treasures[0] && <p className="saved">✓ 「{treasures[0].energy}」が芽ちゃんの世界に届いたよ。</p>}
+      </section>
+
+      <section className="card center">
+        <h3>芽ちゃんのお庭</h3>
+        <Megu mood="smile" />
+        <h2>{gardenStage}</h2>
+        <p>
+          {treasures.length === 0
+            ? 'まだ小さな始まり。今日のたからものを一つ見つけてみよう。'
+            : `これまでに ${treasures.length} 個のたからものが、この世界を育てているよ。`}
+        </p>
+        <div className="moods" aria-label="芽ちゃんの庭">
+          🌱 {treasures.length >= 3 ? '🌼' : ''} {treasures.length >= 7 ? '🌿' : ''} {treasures.length >= 15 ? '🐦' : ''} {treasures.length >= 30 ? '🪑 🏡' : ''}
+        </div>
+        <small>芽ちゃんは大きくなりすぎず、思い出と庭が少しずつ育ちます。</small>
       </section>
 
       <nav>
