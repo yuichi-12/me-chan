@@ -237,10 +237,17 @@ export default function Page() {
   };
 
   const gardenStage =
-    treasures.length >= 30 ? '小さなお庭' :
-    treasures.length >= 15 ? '花のある場所' :
+    treasures.length >= 30 ? '芽ちゃんとわたしのお庭' :
+    treasures.length >= 15 ? '花と木のある庭' :
     treasures.length >= 7 ? '若葉の庭' :
     treasures.length >= 3 ? '小さな花壇' : '芽ちゃんのはじまり';
+
+  const gardenMessage =
+    treasures.length >= 30 ? '思い出が重なって、帰ってきたくなる場所になりました。' :
+    treasures.length >= 15 ? '花や木が増えて、鳥も遊びにくるようになりました。' :
+    treasures.length >= 7 ? '小さな芽が増えて、庭らしくなってきました。' :
+    treasures.length >= 3 ? '最初の花壇ができました。ここから少しずつ景色が育ちます。' :
+    'まだ小さな始まり。今日のたからものが、最初の景色になります。';
 
   const gardenItem = (type) => ({
     good: '🌼',
@@ -896,7 +903,12 @@ export default function Page() {
             : `これまでに ${treasures.length} 個のたからものが、この世界を育てているよ。`}
         </p>
         <div className="gardenScene" aria-label="芽ちゃんの庭">
-          <div className="gardenSky">{treasures.length >= 7 ? '☁️' : '☀️'}</div>
+          <div className="gardenSun">☀️</div>
+          <div className="gardenCloud cloudOne">☁️</div>
+          <div className="gardenCloud cloudTwo">☁️</div>
+          <div className="gardenHill hillBack" />
+          <div className="gardenHill hillFront" />
+          <div className="gardenPath" />
           <div className="gardenMegu"><Megu mood="smile" /></div>
           <div className="gardenGround">
             {treasures.length === 0 && <button className="gardenObject starter" aria-label="最初の芽">🌱</button>}
@@ -911,10 +923,12 @@ export default function Page() {
                 {gardenItem(item.type)}
               </button>
             ))}
+            {treasures.length >= 7 && <span className="gardenExtra flowers" aria-hidden="true">🌷　🌼</span>}
             {treasures.length >= 15 && <span className="gardenBird" title="庭に遊びにきた鳥">🐦</span>}
             {treasures.length >= 30 && <span className="gardenHouse" title="芽ちゃんのおうち">🏡</span>}
           </div>
         </div>
+        <p className="gardenStory">{gardenMessage}</p>
 
         {selectedTreasure && (
           <div className="memoryhint">
