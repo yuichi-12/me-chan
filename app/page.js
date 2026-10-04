@@ -74,6 +74,7 @@ export default function Page() {
   const [treasures, setTreasures] = useState([]);
   const [treasureNote, setTreasureNote] = useState('');
   const [selectedTreasure, setSelectedTreasure] = useState(null);
+  const [fengPrompt, setFengPrompt] = useState(null);
 
   useEffect(() => {
     try {
@@ -295,10 +296,6 @@ export default function Page() {
     const optionalLens = (base, lensTopic = topic) => {
       // 占いを求めていない人へ押しつけない。感情・仕事・休息の相談に限り、
       // 風水を「選べる別視点」として短く案内する。
-      if (['work', 'anxious', 'tired', 'sad'].includes(lensTopic)) {
-        const view = culturalAdvice(lensTopic, seed);
-        return `${base}\n\n🌿 別の見方：${view.text}\n※${view.disclaimer}`;
-      }
       return base;
     };
 
@@ -463,6 +460,8 @@ export default function Page() {
 
     setChat(next);
     setMsg(text);
+    const topic = detectTopic(text.toLowerCase());
+    setFengPrompt(['work', 'anxious', 'tired', 'sad', 'sleep'].includes(topic) ? { text, topic } : null);
 
     try {
       localStorage.setItem(
@@ -767,6 +766,30 @@ export default function Page() {
                 {m.text}
               </div>
             )
+          )}
+
+          {fengPrompt && (
+            <div className="perspectiveOffer">
+              <span>🌿</span>
+              <div>
+                <b>別の見方もあります</b>
+                <small>風水の伝統的な考え方から、暮らしの中でできる工夫も見てみる？</small>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const view = fengShuiPracticalAdvice(fengPrompt.text, `${fengPrompt.text}-${chat.length}-${today}`);
+                  const reply = `【${view.title}】${view.text}\n※${view.disclaimer}\n参考：${view.source.title}（${view.source.publisher}） ${view.source.url}`;
+                  const next = [...chat, { who: 'megu', text: reply }].slice(-20);
+                  setChat(next);
+                  localStorage.setItem('kokoro-chat', JSON.stringify(next));
+                  setFengPrompt(null);
+                }}
+              >
+                風水の見方も見る
+              </button>
+              <button type="button" className="skipLens" onClick={() => setFengPrompt(null)}>今は見ない</button>
+            </div>
           )}
 
           <form
