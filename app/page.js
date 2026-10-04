@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { adviceV4, pick, detectTopic, culturalAdvice, culturalLenses } from './advice-v4';
+import { adviceV4, pick, detectTopic, culturalAdvice, culturalLenses, requestedLens, lensReply } from './advice-v4';
 const qs = [
   { q: '昨夜はよく眠れた？', a: ['よく眠れた', 'まあまあ', 'あまり眠れなかった'] },
   { q: '今の気分はどう？', a: ['😊 とてもいい', '🙂 まあまあ', '😐 普通', '😔 少し沈んでいる', '😣 かなりしんどい'] },
@@ -242,15 +242,16 @@ export default function Page() {
     const topic = detectTopic(t);
     const seed = `${t}-${chat.length}-${today}`;
 
-    // 風水・占術など「別の視点」を明示して求められた場合
-    if (/風水/.test(t)) {
-      const view = culturalAdvice(topic, seed);
-      return `【${view.title}】${view.basis} ${view.text} ※${view.disclaimer}`;
-    }
-
-    if (/占星術|星占い|ホロスコープ/.test(t)) {
-      const view = culturalLenses.astrology;
-      return `【${view.label}】${view.basis} ${pick(view.general, seed)} ※${view.disclaimer}`;
+    // 明示された風水・占術は、体系・必要情報・出典を分けて回答する
+    const lens = requestedLens(t);
+    if (lens) {
+      const view = lensReply(lens, topic, seed);
+      const source = view?.source
+        ? ` 参考：${view.source.title}（${view.source.publisher}） ${view.source.url}`
+        : '';
+      if (view) {
+        return `【${view.title}】${view.basis} ${view.text} ※${view.disclaimer}${source}`;
+      }
     }
 
     // 「別の案」に対応
