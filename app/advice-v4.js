@@ -187,3 +187,81 @@ export function culturalAdvice(topic, seed = '') {
     disclaimer: feng.disclaimer
   };
 }
+
+
+// v5: 出典管理つき占術レンズ。URLは画面表示用の参照先。
+// 占術は「伝統的な体系に基づく解釈」であり、科学的事実として提示しない。
+export const lensSources = {
+  onmyo: {
+    title: '陰陽五行と日本の民俗',
+    publisher: '国立国会図書館サーチ',
+    url: 'https://ndlsearch.ndl.go.jp/books/R100000002-I000001640287'
+  },
+  fourPillars: {
+    title: '四柱推命（エッセンスシリーズ）',
+    publisher: '東洋書院',
+    url: 'https://www.toyoshoin.com/book/b308411.html'
+  },
+  nineStar: {
+    title: '日本で一番わかりやすい九星方位気学の本',
+    publisher: 'PHP研究所',
+    url: 'https://www.php.co.jp/books/detail.php?isbn=978-4-569-85131-0'
+  }
+};
+
+export const fortuneLenses = {
+  fourPillars: {
+    label: '四柱推命の視点',
+    requires: '生年月日と、精密に見る場合は出生時刻',
+    basis: '四柱推命では、年・月・日・時を十干十二支で表し、陰陽五行などの関係から命式を読む伝統的な占術です。',
+    disclaimer: '伝統的な占術上の解釈で、科学的な性格診断や未来予測ではありません。',
+    sourceKey: 'fourPillars'
+  },
+  nineStar: {
+    label: '九星気学の視点',
+    requires: '生年月日。方位を見る場合は時期や移動方向なども必要',
+    basis: '九星気学では九星と方位、年・月・日などの盤を用いて吉凶を読む流儀があります。',
+    disclaimer: '伝統的な占術上の解釈で、科学的な効果や未来を保証するものではありません。',
+    sourceKey: 'nineStar'
+  }
+};
+
+export function requestedLens(text) {
+  if (/四柱推命/.test(text)) return 'fourPillars';
+  if (/九星|気学/.test(text)) return 'nineStar';
+  if (/占星術|星占い|ホロスコープ/.test(text)) return 'astrology';
+  if (/風水|五行/.test(text)) return 'fengShui';
+  return null;
+}
+
+export function lensReply(lens, topic, seed = '') {
+  if (lens === 'fengShui') {
+    const view = culturalAdvice(topic, seed);
+    return {
+      ...view,
+      source: lensSources.onmyo,
+      needsProfile: false
+    };
+  }
+  if (lens === 'astrology') {
+    const view = culturalLenses.astrology;
+    return {
+      title: view.label,
+      basis: view.basis,
+      text: pick(view.general, seed),
+      disclaimer: view.disclaimer,
+      source: null,
+      needsProfile: true
+    };
+  }
+  const view = fortuneLenses[lens];
+  if (!view) return null;
+  return {
+    title: view.label,
+    basis: view.basis,
+    text: `きちんと見るには「${view.requires}」が必要だよ。情報がない状態で結果を作ることはしないよ。`,
+    disclaimer: view.disclaimer,
+    source: lensSources[view.sourceKey],
+    needsProfile: true
+  };
+}
