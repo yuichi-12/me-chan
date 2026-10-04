@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { adviceV4, pick, detectTopic, culturalAdvice, culturalLenses, requestedLens, lensReply } from './advice-v4';
+import { adviceV4, pick, detectTopic, culturalAdvice, culturalLenses, requestedLens, lensReply, fengShuiPracticalAdvice } from './advice-v4';
 const qs = [
   { q: '昨夜はよく眠れた？', a: ['よく眠れた', 'まあまあ', 'あまり眠れなかった'] },
   { q: '今の気分はどう？', a: ['😊 とてもいい', '🙂 まあまあ', '😐 普通', '😔 少し沈んでいる', '😣 かなりしんどい'] },
@@ -277,6 +277,10 @@ export default function Page() {
 
     // 明示された風水・占術は、体系・必要情報・出典を分けて回答する
     const lens = requestedLens(t);
+    if (lens === 'fengShui') {
+      const view = fengShuiPracticalAdvice(t, seed);
+      return `【${view.title}】${view.text} ※${view.disclaimer} 参考：${view.source.title}（${view.source.publisher}） ${view.source.url}`;
+    }
     if (lens) {
       const view = lensReply(lens, topic, seed);
       const source = view?.source
