@@ -30,3 +30,5 @@
 .gardenExtra{position:absolute;left:11%;bottom:72px;font-size:24px;z-index:4}.gardenBird{right:16%;top:62px;z-index:5}.gardenHouse{right:4%;bottom:22px;font-size:52px;z-index:4}
 .gardenStory{margin:10px auto 18px!important;max-width:320px;font-size:14px;line-height:1.7!important;color:#66755b!important}
 @media(max-width:360px){.gardenScene{height:300px}.gardenObject{font-size:29px}.gardenMegu{top:84px;transform:translateX(-50%) scale(.44)}}
+
+.perspectiveOffer{margin:14px 0;padding:14px;background:#f4f7e9;border:1px solid #dce8cf;border-radius:18px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;text-align:left}.perspectiveOffer>span{font-size:24px}.perspectiveOffer b,.perspectiveOffer small{display:block}.perspectiveOffer small{margin-top:4px;color:#6f7967;line-height:1.5}.perspectiveOffer button{grid-column:1/-1;width:100%;padding:11px 14px;font-size:14px;background:#e2efdc;color:#426b46}.perspectiveOffer .skipLens{margin-top:-2px;background:transparent;color:#7d8278;font-weight:500;padding:7px}
