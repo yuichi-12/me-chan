@@ -254,6 +254,17 @@ export default function Page() {
       }
     }
 
+    // 通常相談では「質問に直接答える」を最優先し、その後に必要な時だけ伝統文化の別視点を添える
+    const optionalLens = (base, lensTopic = topic) => {
+      // 占いを求めていない人へ押しつけない。感情・仕事・休息の相談に限り、
+      // 風水を「選べる別視点」として短く案内する。
+      if (['work', 'anxious', 'tired', 'sad'].includes(lensTopic)) {
+        const view = culturalAdvice(lensTopic, seed);
+        return `${base}\n\n🌿 別の見方：${view.text}\n※${view.disclaimer}`;
+      }
+      return base;
+    };
+
     // 「別の案」に対応
     if (/別の|ほか|他に|違う案/.test(t)) {
       return `もちろん。別の案なら「${pick(
@@ -282,7 +293,7 @@ export default function Page() {
     if (topic === 'work') {
       const action = pick(adviceV4.work, seed);
 
-      return `仕事のことなんだね。今日は「${action}」くらいまで小さくしてみるのも一つだよ。今は解決策を一緒に整理したい？ それとも、まず何があったか聞いてほしい？`;
+      return optionalLens(`仕事のことなんだね。まず質問に答えると、今日は「${action}」まで小さくして進めるのが一案だよ。状況をもう少し教えてくれれば、相手への伝え方や次の一手まで一緒に整理できるよ。`, 'work');
     }
 
     // 睡眠
@@ -296,7 +307,7 @@ export default function Page() {
     if (topic === 'anxious') {
       const action = pick(adviceV4.anxious, seed);
 
-      return `不安があるんだね。今すぐ全部を解決しようとせず、「${action}」から始めてみるのも一つだよ。その心配は、まだ起きていないこと？ それとも今起きていることかな？`;
+      return optionalLens(`不安があるんだね。まず今できることとして「${action}」から始めるのが一案だよ。もし何が不安なのか教えてくれたら、その内容そのものへの対処を一緒に考えるよ。`, 'anxious');
     }
 
     // 怒り
@@ -315,7 +326,7 @@ export default function Page() {
     if (topic === 'sad') {
       const action = pick(adviceV4.sad, seed);
 
-      return `つらかったんだね。無理に前向きにならなくていいよ。今なら「${action}」くらいの小さなことでも十分。今日は話を聞いてほしい？ それとも少し楽になる方法を一緒に探す？`;
+      return optionalLens(`つらかったんだね。今は無理に前向きにせず「${action}」くらいでも十分だよ。何があったか話してくれれば、その出来事に沿って一緒に考えるよ。`, 'sad');
     }
 
     // 疲れ
@@ -323,7 +334,7 @@ export default function Page() {
       const action = pick(adviceV4.tired, seed);
       const rest = pick(adviceV4.rest, seed + 'rest');
 
-      return `少し使い切っている感じかな。今日は「${action}」か「${rest}」のどちらか一つで十分だよ。疲れは、体・気持ち・人付き合い・仕事のどれが一番大きい？`;
+      return optionalLens(`少し使い切っている感じかな。今日は「${action}」か「${rest}」のどちらか一つで十分だよ。疲れの原因を教えてくれれば、休み方だけでなく原因への対処も一緒に考えるよ。`, 'tired');
     }
     // ===== ここまで v4 相談エンジン =====
     
