@@ -75,6 +75,7 @@ export default function Page() {
   const [treasureNote, setTreasureNote] = useState('');
   const [selectedTreasure, setSelectedTreasure] = useState(null);
   const [fengPrompt, setFengPrompt] = useState(null);
+  const [moodChoice, setMoodChoice] = useState(null);
 
   useEffect(() => {
     try {
@@ -759,6 +760,39 @@ export default function Page() {
     );
   }
 
+  const moodGuides = {
+    good: {
+      icon: '😊', label: '調子がいい',
+      reply: '今日は気持ちの流れがよさそうだね。その勢いを使い切らず、「楽しみを一つ予定に入れる」くらいがおすすめ。食事は好きなものを一品、行動は少し遠回りして歩くくらいで十分だよ。',
+      feng: '風水・五行の伝統的な見方では、明るさや風通しを整えることを暮らしの区切りとして取り入れます。今日は窓辺を少し整えて、気持ちのよい流れを保つきっかけにしてみるのも一案だよ。'
+    },
+    normal: {
+      icon: '🙂', label: 'まあまあ',
+      reply: '大きく崩れてはいない日だね。今日は無理に気分を上げるより、「一つ終わらせて、一つ休む」くらいのペースが合いそう。温かい食事と5分の休憩を一つずつ入れてみよう。',
+      feng: '風水の伝統的な考え方を暮らしのヒントにするなら、机や玄関など毎日目にする場所を一か所だけ整えるのがおすすめ。運勢を変える保証ではなく、気持ちを切り替える合図として使ってね。'
+    },
+    tired: {
+      icon: '😔', label: '少し疲れている',
+      reply: '今日は頑張りを足すより、回復を優先しよう。温かいスープやうどんなど食べやすいものを選んで、帰宅後は10分だけ何もしない時間を作るのがおすすめだよ。',
+      feng: '風水では住環境を整えることを大切にする考え方があります。今日は物を増やさず、寝床やソファの周りを一か所だけ片づけて「休む場所」を整える程度がちょうどいいよ。'
+    },
+    anxious: {
+      icon: '😣', label: '不安・考えごとがある',
+      reply: '考えごとがある日は、頭の中だけで解決しようとしない方がいいよ。紙やメモに「気になること」と「明日できる最初の一歩」を一つずつ書いて、今日はそこで区切ろう。今夜は答えを出すより、頭を休ませることを優先してね。',
+      feng: '風水・陰陽五行は科学的な不安対処法ではないけれど、環境を整えるための伝統的な視点として使えます。今日は視界に入る場所から不要な物を一つ減らして、「ここで一区切り」の合図にするのも一案だよ。'
+    }
+  };
+
+  const chooseMoodGuide = (key) => {
+    const guide = moodGuides[key];
+    if (!guide) return;
+    setMoodChoice(key);
+    setFengPrompt(null);
+    const next = [...chat, { who: 'user', text: `${guide.icon} ${guide.label}` }, { who: 'megu', text: guide.reply }].slice(-20);
+    setChat(next);
+    localStorage.setItem('kokoro-chat', JSON.stringify(next));
+  };
+
   if (screen === 'talk') {
     return (
       <main>
@@ -777,10 +811,35 @@ export default function Page() {
           )}
 
           <div className="bubble">
-            なんでも話してね。
-            うれしいこと、ちょっと疲れたこと。
-            何でも聞くよ。
+            <b>今日の気分はどれに近い？</b><br />
+            まずは4つから選んでね。選んだ気分に合わせて、今日できることを具体的に提案するよ。
           </div>
+
+          <div className="grid">
+            {Object.entries(moodGuides).map(([key, guide]) => (
+              <button className="soft" key={key} onClick={() => chooseMoodGuide(key)}>
+                {guide.icon}<b>{guide.label}</b>
+              </button>
+            ))}
+          </div>
+
+          {moodChoice && (
+            <div className="perspectiveOffer">
+              <span>🌿</span>
+              <div>
+                <b>風水の見方も見る？</b>
+                <small>科学的な効果ではなく、伝統的な暮らしのヒントとして紹介します。</small>
+              </div>
+              <button type="button" onClick={() => {
+                const guide = moodGuides[moodChoice];
+                const next = [...chat, { who: 'megu', text: `【風水の視点】${guide.feng}\n※伝統文化上の解釈で、科学的な効果や運勢の変化を保証するものではありません。` }].slice(-20);
+                setChat(next);
+                localStorage.setItem('kokoro-chat', JSON.stringify(next));
+                setMoodChoice(null);
+              }}>風水の見方も見る</button>
+              <button type="button" className="skipLens" onClick={() => setMoodChoice(null)}>今は見ない</button>
+            </div>
+          )}
 
           {chat.map((m, i) =>
             m.who === 'user' ? (
@@ -824,34 +883,12 @@ export default function Page() {
             </div>
           )}
 
-          <form
-            className="input"
-            onSubmit={(e) => {
-              e.preventDefault();
-
-              const v =
-                e.currentTarget.elements.message.value;
-
-              sendChat(v);
-
-              e.currentTarget.reset();
-            }}
-          >
-            <input
-              name="message"
-              maxLength="1000"
-              placeholder="メッセージを入力…"
-              autoComplete="off"
-            />
-
-            <button aria-label="送信">
-              ➤
-            </button>
-          </form>
+          <div className="memoryhint">
+            💡 無料版は選択式で、回答のずれを減らしています。自由入力のAI相談はPlus版で提供予定です。
+          </div>
 
           <small className="demo">
-            会話はこの端末内で処理します。
-            外部AIには送信しません。
+            選んだ内容はこの端末内で処理します。外部AIには送信しません。
           </small>
         </section>
 
